@@ -78,7 +78,7 @@ class SimulatorProcess:
         if basis is not None:
             tmp_state = self.change_measure_basis(position, basis)
         else:
-            tmp_state = self._state.clone()
+            tmp_state = self._state.clone().detach()
         if position is None:
             position = list(range(self.n_qubit))
             weight = tc.abs(tmp_state.contiguous().view(-1)) ** 2
@@ -120,13 +120,13 @@ class SimulatorProcess:
             position = list(range(self.n_qubit))
         x_basis = tc.tensor([[1, 1], [1, -1]], device=self.device, dtype=self.dtype) / np.sqrt(2)
         y_basis = tc.tensor([[1, 1j], [1, -1j]], device=self.device, dtype=self.dtype) / np.sqrt(2)
-        tmp_state = self._state.clone()
+        tmp_state = self._state.clone().detach()
         for nn in range(len(position)):
             pp = position[nn]
             if basis[nn] == 'x':
-                tmp_state = tc.einsum('abc,bd->adc', tmp_state.view(2 ** pp, -1, 2 ** (self.n_qubit - pp - 1)), x_basis)
+                tmp_state = tc.einsum('abc,bd->adc', tmp_state.reshape(2 ** pp, -1, 2 ** (self.n_qubit - pp - 1)), x_basis)
             elif basis[nn] == 'y':
-                tmp_state = tc.einsum('abc,bd->adc', tmp_state.view(2 ** pp, -1, 2 ** (self.n_qubit - pp - 1)), y_basis)
+                tmp_state = tc.einsum('abc,bd->adc', tmp_state.reshape(2 ** pp, -1, 2 ** (self.n_qubit - pp - 1)), y_basis)
             tmp_state = tmp_state.view(self.shape).contiguous()
         return tmp_state
 
